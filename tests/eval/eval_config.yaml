@@ -1,0 +1,34 @@
+metrics_to_run:
+  - custom_response_quality
+  - classification_recall
+  - tool_call_count
+
+custom_metrics:
+  # LLM-as-judge against the reference briefing (see response_quality.py).
+  - name: custom_response_quality
+    custom_function_file: response_quality.py
+
+  # Deterministic: did the agent name every triage label the reference names?
+  - name: classification_recall
+    custom_function: |
+      def evaluate(instance):
+          import json
+          labels = ["single_source_outage", "single_source_spike", "traffic_change", "price_change", "data_gap"]
+          ref = json.dumps(instance.get("reference") or "", ensure_ascii=False)
+          got = json.dumps(instance.get("response") or "", ensure_ascii=False)
+          expected = [l for l in labels if l in ref]
+          if not expected:
+              return {"score": 1.0}
+          return {"score": sum(l in got for l in expected) / len(expected)}
+
+  # The procedure requires drilling down; a briefing with 0-1 tool calls is guessing.
+  - name: tool_call_count
+    custom_function: |
+      def evaluate(instance):
+          n = 0
+          for turn in (instance.get("agent_data") or {}).get("turns", []):
+              for event in turn.get("events", []):
+                  for part in (event.get("content") or {}).get("parts", []):
+                      if "function_call" in part:
+                          n += 1
+          return {"score": n}

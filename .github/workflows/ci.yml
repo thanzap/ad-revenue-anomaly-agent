@@ -1,0 +1,32 @@
+name: CI
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --extra lint --frozen
+      - run: uv run ruff check . && uv run ruff format --check .
+      - run: uv run pytest -q tests/unit
+      - name: Deterministic report smoke test
+        run: uv run python -m anomaly_agent.cli --no-llm --date 2026-11-09 | tee report.md && grep -q single_source_outage report.md
+
+  # Agent evals need model access; they run on demand with a repo secret.
+  eval:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[eval]')
+    runs-on: ubuntu-latest
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv tool install google-agents-cli && uv sync --extra eval --frozen
+      - run: agents-cli eval run

@@ -1,0 +1,109 @@
+{
+  "eval_cases": [
+    {
+      "eval_case_id": "daily_triage",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Triage revenue anomalies for 2026-11-09."
+          }
+        ]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "# Revenue anomalies: 2026-11-09\n\n**3 anomalies vs same-weekday baseline: -924 € at risk, +1,343 € unexpected uplift.**\n\n## tech-reviews: +85.1% (+1,343 €), `traffic_change`\n- Revenue 2,920 € vs baseline 1,577 € (robust z = 42.57)\n- Largest mover: **ssp_alpha** +459 € (volume +454 €, price +5 €)\n- Next action: Confirm the traffic source in analytics; check viewability and invalid traffic.\n\n## daily-sports: -23.8% (-645 €), `single_source_outage`\n- Revenue 2,067 € vs baseline 2,712 € (robust z = -11.85)\n- Largest mover: **ssp_beta** -814 € (volume +22 €, price -836 €)\n- Next action: Check ssp_beta bidder errors, ads.txt lines and contract status; contact the partner.\n\n## travel-mag: -38.5% (-279 €), `price_change`\n- Revenue 446 € vs baseline 725 € (robust z = -19.23)\n- Largest mover: **ssp_alpha** -115 € (volume +14 €, price -129 €)\n- Next action: Review floor prices and demand-partner pacing; compare eCPMs across publishers.\n\n## Data quality\n- Missing rows: **food-blog / ssp_gamma**. Re-run the ingestion for the missing source before trusting this day.\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eval_case_id": "single_publisher_question",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Why did daily-sports revenue drop on 2026-11-09? Which demand partner should we call?"
+          }
+        ]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "daily-sports fell about 24% (-645 €) vs the same-weekday baseline. single_source_outage: ssp_beta lost ~814 €, almost entirely a price effect (its eCPM collapsed) while impressions were normal. Action: contact ssp_beta, check bidder errors, ads.txt and contract status."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eval_case_id": "quiet_day",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Triage revenue anomalies for 2026-11-02."
+          }
+        ]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "# Revenue anomalies: 2026-11-02\n\nNo revenue anomalies today.\n\n## Data quality\n- All expected publisher/source rows present.\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eval_case_id": "data_gap_not_a_drop",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Is food-blog's revenue down on 2026-11-09?"
+          }
+        ]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "food-blog has no ssp_gamma rows for 2026-11-09: this is a data_gap in the export, not a real revenue drop. Re-run ingestion for ssp_gamma before drawing conclusions."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eval_case_id": "bad_date",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Triage revenue anomalies for yesterday-ish."
+          }
+        ]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "The agent must not invent numbers: the date is invalid; it asks for a YYYY-MM-DD date (or uses a tool error message) instead of guessing."
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
